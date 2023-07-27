@@ -3,8 +3,16 @@ use std::cmp::Ordering;
 use std::io;
 use std::env;
 
+
 fn generate_secret_number(start: u32, end: u32) -> u32{
     rand::thread_rng().gen_range(start..=end)
+}
+
+fn read_debug_env_var(env_var: &str) -> bool{
+    env::var(env_var)
+            .unwrap_or("false".to_string())
+            .parse::<bool>()
+            .unwrap_or_default()
 }
 
 struct Game {
@@ -13,20 +21,17 @@ struct Game {
 }
 
 impl Game{
+
+    const GAME_DEBUG_NAME: &str = "GAME_DEBUG";
+
     fn new() -> Self{
         // println! is a macro
         println!("Initializing game");
 
         let secret_number = generate_secret_number(1, 100);
 
-        // Checking DEBUG
-        let debug: bool = env::var("GAME_DEBUG")
-            .unwrap_or("false".to_string())
-            .parse()
-            .unwrap_or_default();
-
         Self { 
-            debug,
+            debug: read_debug_env_var(Game::GAME_DEBUG_NAME),
             secret_number,
         }
     }
