@@ -2,11 +2,15 @@ use rand::Rng;
 use std::cmp::Ordering;
 use std::io;
 
+fn generate_secret_number(start: u32, end: u32) -> u32{
+    rand::thread_rng().gen_range(start..=end)
+}
+
 fn main() {
     // println! is a macro
     println!("* Guess the number *");
 
-    let secret_number = rand::thread_rng().gen_range(1..=100);
+    let secret_number = generate_secret_number(1, 100);
 
     loop {
         println!("-- Input your guess -- ");
