@@ -1,11 +1,78 @@
-use rand::Rng;
+// use rand::Rng;
+use serde::Deserialize;
+use serde::Serialize;
 use std::cmp::Ordering;
 use std::io;
 use std::env;
+use serde_json;
+use reqwest::blocking;
+
+#[derive(Debug)]
+#[derive(Serialize, Deserialize)]
+struct GptMessage{
+    role: String,
+    content: String,
+}
+#[derive(Serialize)]
+struct GptPayload{
+    model: String,
+    temperature: f32,
+    messages: Vec<GptMessage>
+}
+
+#[derive(Debug)]
+#[derive(Deserialize)]
+struct GptChoice{
+    message: GptMessage,
+}
+
+#[derive(Debug)]
+#[derive(Deserialize)]
+struct GptResponse{
+    choices: Vec<GptChoice>
+}
+
+// fn generate_secret_number(start: u32, end: u32) -> u32{
+//     rand::thread_rng().gen_range(start..=end)
+// }
+
+fn generate_secret_number_gpt(start: u32, end: u32) -> u32{
+
+    let gpt_payload = GptPayload{
+        model: "gpt-3.5-turbo".to_string(),
+        temperature: 0.7,
+        messages: vec![GptMessage{
+            role: "user".to_string(),
+            content: format!("Return just a random number between {} and {} without explanations.", start, end),
+        }]
+    };
+
+    let gpt_payload = serde_json::to_string(&gpt_payload).expect("Error converting to JSON");
+
+    // Reading OPENAI_TOKEN env var
+    let openai_token = env::var("OPENAI_TOKEN").unwrap_or_default();
+
+    let client = reqwest::blocking::Client::new();
+
+    let response = client
+            .post("https://api.openai.com/v1/chat/completions".to_string())
+            .header("Content-Type", "application/json")
+            .header("Authorization", format!("Bearer {}", openai_token))
+            .body(gpt_payload)
+            .send()
+            .expect("Error calling GPT");
+
+    if response.status().is_success(){
+        let response_text = response.text().unwrap_or_default();
+        let gpt_response: GptResponse = serde_json::from_str(&response_text).expect("Error parsing GPT response");
+        let secret_number: u32 = gpt_response.choices[0].message.content.parse().unwrap_or(50);
+
+        return secret_number;
+    }
+
+    50
 
 
-fn generate_secret_number(start: u32, end: u32) -> u32{
-    rand::thread_rng().gen_range(start..=end)
 }
 
 fn read_debug_env_var(env_var: &str) -> bool{
@@ -27,8 +94,7 @@ impl Game{
     fn new() -> Self{
         // println! is a macro
         println!("Initializing game");
-
-        let secret_number = generate_secret_number(1, 100);
+        let secret_number = generate_secret_number_gpt(1, 100);
 
         Self { 
             debug: read_debug_env_var(Game::GAME_DEBUG_NAME),
