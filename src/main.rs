@@ -64,19 +64,19 @@ fn gpt_completion(prompt: String) -> Result<String, String> {
 
     if !response.status().is_success() {
         return Err(format!("Error status code: {}", response.status()));
-    } else {
-        let response_text = match response.text() {
-            Ok(r) => r,
-            Err(_) => return Err("Error reading GPT response".to_string()),
-        };
+    }
 
-        let gpt_response: GptResponse = match serde_json::from_str(&response_text) {
-            Ok(g) => g,
-            Err(_) => return Err("Error converting to json".to_string()),
-        };
-
-        return Ok(gpt_response.choices[0].message.content.clone());
+    let response_text = match response.text() {
+        Ok(r) => r,
+        Err(_) => return Err("Error reading GPT response".to_string()),
     };
+
+    let gpt_response: GptResponse = match serde_json::from_str(&response_text) {
+        Ok(g) => g,
+        Err(_) => return Err("Error converting to json".to_string()),
+    };
+
+    Ok(gpt_response.choices[0].message.content.clone())
 }
 
 fn generate_secret_number(start: u32, end: u32) -> u32 {
@@ -112,12 +112,11 @@ fn handler_secret_number(gpt: bool) -> fn(u32, u32) -> u32 {
     if gpt {
         println!("OPENAI TOKEN found!");
         println!("Generating secret number with GPT3.5");
-        generate_secret_number_gpt
-    } else {
-        println!("OPENAI TOKEN not found!");
-        println!("Generating secret number with local CPU");
-        generate_secret_number
+        return generate_secret_number_gpt;
     }
+    println!("OPENAI TOKEN not found!");
+    println!("Generating secret number with local CPU");
+    generate_secret_number
 }
 
 struct Game {
@@ -145,9 +144,8 @@ impl Game {
                 },
                 Err(e) => {
                     println!("Error generating clue: {}", e);
-                } 
+                },
             };
-            
         }
 
         Self { secret_number }
