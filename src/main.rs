@@ -14,7 +14,11 @@ struct Game {
 
 impl Game {
     fn new() -> Self {
+        let start: u32 = 0;
+        let end: u32 = 50;
+
         println!("Welcome to the guessing game powered by GPT");
+        println!("Guess a secret number between {} - {}", start, end);
 
         let mut gpt: bool = false;
         let openai_token = env::var("OPENAI_TOKEN").unwrap_or_default();
@@ -24,7 +28,7 @@ impl Game {
         }
 
         let fn_handler = handler_secret_number(gpt);
-        let secret_number = fn_handler(0, 50);
+        let secret_number = fn_handler(start, end);
 
         if gpt {
             match gpt_completion(format!("Tell me a funny clue that helps me to guess the secret number. Just returns the clue without the secret number nor the clue's explanation.: {}", secret_number)){
@@ -42,7 +46,7 @@ impl Game {
 
     fn start(&self) {
         loop {
-            println!("-- Input your guess -- :");
+            println!("Input your guess: ");
 
             let mut guess = String::new();
 
