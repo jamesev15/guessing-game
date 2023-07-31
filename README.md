@@ -17,7 +17,7 @@ If you don't have an OPENAI_TOKEN, don't worry, the game will generate a random 
 
 If you set up the token, GPT will give you a clue to find the secret number!  
 
-To run the game just execute the command  
+To run the game only execute the command  
 
     $cargo run
 
