@@ -2,7 +2,7 @@ mod gpt;
 mod secret;
 
 use gpt::gpt_completion;
-use secret::handler_secret_number;
+use secret::{gpt_clue, handler_secret_number};
 
 use std::cmp::Ordering;
 use std::env;
@@ -13,32 +13,19 @@ struct Game {
 }
 
 impl Game {
-    fn new() -> Self {
-        let start: u32 = 0;
-        let end: u32 = 50;
-
+    fn new(start: u32, end: u32) -> Self {
         println!("Welcome to the guessing game powered by GPT");
         println!("Guess a secret number between {} - {}", start, end);
 
-        let mut gpt: bool = false;
         let openai_token = env::var("OPENAI_TOKEN").unwrap_or_default();
 
-        if openai_token != "".to_string() {
-            gpt = true;
-        }
+        let gpt = if &openai_token != "" { true } else { false };
 
         let fn_handler = handler_secret_number(gpt);
         let secret_number = fn_handler(start, end);
 
         if gpt {
-            match gpt_completion(format!("Tell me a funny clue that helps me to guess the secret number. Just returns the clue without the secret number nor the clue's explanation.: {}", secret_number)){
-                Ok(clue) => {
-                    println!("GPT Clue: {}", clue);
-                },
-                Err(e) => {
-                    println!("Error generating clue: {}", e);
-                },
-            };
+            println!("{}", gpt_clue(secret_number));
         }
 
         Self { secret_number }
@@ -73,6 +60,6 @@ impl Game {
 }
 
 fn main() {
-    let game = Game::new();
+    let game = Game::new(0, 50);
     game.start();
 }
